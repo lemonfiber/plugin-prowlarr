@@ -1,0 +1,53 @@
+schema_version = 1
+
+[plugin]
+id          = "prowlarr"
+name        = "Prowlarr"
+version     = "1.0.0"
+description = "Holds your indexer accounts in one place and shares them with everything else"
+without_it  = "Every app needs indexers configured separately"
+upstream    = "https://github.com/Prowlarr/Prowlarr"
+license     = "GPL-3.0-only"
+forms       = ["search", "hunt", "tv", "movies", "music", "books", "auto", "full"]
+
+[[service]]
+id          = "prowlarr"
+name        = "Prowlarr"
+image       = "lscr.io/linuxserver/prowlarr"
+digest      = "sha256:f2b26429893d4c4cb71941b7ee50b1bdecd9d5f9f9e02d5410615e9f4f7c8d95"
+tag         = "2.6.5.5623-ls162"
+port        = 9696
+bind        = "loopback"
+listens     = 9696
+health      = { kind = "http", path = "/ping", timeout_s = 60 }
+criticality = "core"
+memory_mib  = 200
+reaches     = "the indexers you configured"
+asks_for    = "Runs the searches everything else asks for, and reads each indexer's capabilities and remaining allowance, authenticating with the keys you gave it."
+provides    = ["indexer.search"]
+api         = { kind = "servarr", key_source = "config-xml", path = "/config/config.xml", version = 1 }
+takes_data  = true
+user_mode   = "puid-env"
+replaces    = "prowlarr"
+
+[[ask]]
+capability = "library.curate"
+each       = true
+
+[[ask]]
+capability = "indexer.proxy"
+
+[[claim]]
+capability = "indexer.search"
+
+[[claim.probe]]
+id      = "guarded"
+request = { method = "GET", path = "/api/v1/indexer" }
+expect  = { status = 401 }
+fixture = "recordings/prowlarr/indexer-search-guarded.json"
+
+[[claim.probe]]
+id      = "indexers"
+request = { method = "GET", path = "/api/v1/indexer" }
+expect  = { status = 200, json_array_min = 0 }
+fixture = "recordings/prowlarr/indexer-search-indexers.json"
