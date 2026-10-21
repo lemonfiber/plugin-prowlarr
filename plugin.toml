@@ -37,6 +37,9 @@ each       = true
 [[ask]]
 capability = "indexer.proxy"
 
+[[ask]]
+capability = "dashboard.show"
+
 [[claim]]
 capability = "indexer.search"
 
