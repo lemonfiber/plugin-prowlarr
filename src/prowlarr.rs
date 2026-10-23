@@ -4,8 +4,8 @@
 use std::sync::Arc;
 
 use adapter_kit_servarr::client::Servarr;
-use adapter_kit_servarr::credential::Holding;
 use async_trait::async_trait;
+use lemonfiber_adapter_kit::credential::Holding;
 use lemonfiber_ports::http::Http;
 use lemonfiber_ports::service::{Aggregator, Aggregators, Failure, KnownAggregator};
 
@@ -43,11 +43,11 @@ impl Prowlarr {
 #[async_trait]
 impl Aggregators for Prowlarr {
     async fn aggregators(&self) -> Result<Vec<KnownAggregator>, Failure> {
-        Err(self.servarr.endpoint().unsupported(READS_NO_AGGREGATOR))
+        Err(self.servarr.unsupported(READS_NO_AGGREGATOR))
     }
 
     async fn add_aggregator(&self, _aggregator: &Aggregator) -> Result<(), Failure> {
-        Err(self.servarr.endpoint().unsupported(READS_NO_AGGREGATOR))
+        Err(self.servarr.unsupported(READS_NO_AGGREGATOR))
     }
 }
 
