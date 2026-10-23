@@ -1,0 +1,21 @@
+{
+  "recorded_from": "lscr.io/linuxserver/prowlarr@sha256:4e992f9b9229bc8c97c666b10b042a7360bce1d99b196e8aa29fd9805849cbf1",
+  "note": "The one application the run gave Prowlarr, by the address it reaches the curator on.",
+  "request": {
+    "method": "POST",
+    "path": "/lemonfiber/indexer.search/v1/applications",
+    "accept": "application/json"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "json": [
+      {
+        "id": "1",
+        "base_url": "http://sonarr:8989"
+      }
+    ]
+  }
+}
