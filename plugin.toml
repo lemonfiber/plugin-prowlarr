@@ -24,33 +24,70 @@ criticality = "core"
 memory_mib  = 200
 reaches     = "the indexers you configured"
 asks_for    = "Runs the searches everything else asks for, and reads each indexer's capabilities and remaining allowance, authenticating with the keys you gave it."
-provides    = ["indexer.search"]
-api         = { kind = "servarr", key_source = "config-xml", path = "/config/config.xml", version = 1 }
 takes_data  = true
 user_mode   = "puid-env"
+native      = "servarr"
 replaces    = "prowlarr"
 
+[service.env]
+PROWLARR__AUTH__APIKEY = { secret = "upstream-key" }
+
+[[service]]
+id          = "prowlarr-adapter"
+name        = "Prowlarr adapter"
+image       = "ghcr.io/lemonfiber/prowlarr-adapter"
+digest      = "sha256:953109cd7703c167bdaf8e86fad22385dd8d04c5268f37a762220b6757de5049"
+tag         = "main-a01579d0bc38"
+criticality = "core"
+reaches     = ""
+asks_for    = "Nothing beyond this machine. It answers lemonfiber's indexer.search contract by calling Prowlarr, beside it, with the key lemonfiber minted for it."
+config_path = "/config"
+listens     = 8080
+speaks      = ["indexer.search@1"]
+fronts      = "prowlarr"
+provides    = ["indexer.search"]
+upstream    = { api_key = { secret = "upstream-key" } }
+
+[[secret]]
+id     = "upstream-key"
+of     = "prowlarr"
+minted = true
+why    = "The key Prowlarr answers its API to, which the adapter in front of it presents"
+
+[[proof]]
+id      = "prowlarr.answers"
+service = "prowlarr"
+title   = "Prowlarr says it answers to anybody"
+fixture = "recordings/prowlarr/ping-answers.json"
+why     = """
+The adapter's readiness is this answer, which it asks without a key, so the
+pinned image has to give it to a caller presenting nothing.
+"""
+request = { method = "GET", path = "/ping" }
+expect  = { status = 200, json = { status = "OK" } }
+
+[[proof]]
+id      = "prowlarr.guarded"
+service = "prowlarr"
+title   = "Prowlarr lists its indexers to nobody presenting nothing"
+fixture = "recordings/prowlarr/indexers-guarded.json"
+why     = """
+The indexers name the household's accounts and where it searches. Only the
+adapter asks, with the key lemonfiber minted, so a Prowlarr that listed them to
+a caller presenting nothing would be telling every device that can reach it.
+"""
+request = { method = "GET", path = "/api/v1/indexer" }
+expect  = { status = 401 }
+
 [[ask]]
+service    = "prowlarr"
 capability = "library.curate"
 each       = true
 
 [[ask]]
+service    = "prowlarr"
 capability = "indexer.proxy"
 
 [[ask]]
+service    = "prowlarr"
 capability = "dashboard.show"
-
-[[claim]]
-capability = "indexer.search"
-
-[[claim.probe]]
-id      = "guarded"
-request = { method = "GET", path = "/api/v1/indexer" }
-expect  = { status = 401 }
-fixture = "recordings/prowlarr/indexer-search-guarded.json"
-
-[[claim.probe]]
-id      = "indexers"
-request = { method = "GET", path = "/api/v1/indexer" }
-expect  = { status = 200, json_array_min = 0 }
-fixture = "recordings/prowlarr/indexer-search-indexers.json"
