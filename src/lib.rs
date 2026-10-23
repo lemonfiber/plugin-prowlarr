@@ -4,5 +4,3 @@
 pub mod adapter;
 mod instant;
 pub mod prowlarr;
-pub mod settings;
-pub mod web;

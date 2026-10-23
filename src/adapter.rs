@@ -8,6 +8,9 @@ use lemonfiber_contract::capabilities::indexer;
 
 use crate::prowlarr::Prowlarr;
 
+/// Where Prowlarr answers, by its service id and the port it listens on.
+pub const ADDRESS: &str = "http://prowlarr:9696";
+
 /// The upstream this adapter fronts, as its project names itself.
 pub const UPSTREAM: &str = "Prowlarr";
 
