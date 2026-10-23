@@ -15,13 +15,14 @@ name it cannot reach. The adapter runs from this repository's Dockerfile, as
 lemonfiber runs it: the caller's uid, read-only, no capabilities, the key and
 the upstream credential owner-only in its configuration directory.
 
-This script stands where lemonfiber stands: it mints the service's API key as
-32 lowercase hex characters, hands it to the service through its environment,
-and writes it to the adapter's `upstream.json` beside `lemonfiber.key`. Before
-anything is asked, Prowlarr is given one application, its syncing switched
-off so it is saved without being reached, so the cases that test and rekey an
-application have one to ask about. A run whose
-answers hold any credential writes nothing.
+This script stands where lemonfiber stands: it mints the service's API key as 32
+lowercase hex characters, hands it to the service through the environment
+variables `plugin.toml`'s `env` names it in, valued in the docker client's own
+environment and never on a command line or on disk, and writes it to the
+adapter's `upstream.json` beside `lemonfiber.key`. Before anything is asked,
+Prowlarr is given one application, its syncing switched off so it is saved
+without being reached, so the cases that test and rekey an application have one
+to ask about. A run whose answers hold any credential writes nothing.
 
     python3 .github/record.py            write conformance/
     python3 .github/record.py --check    record again and compare
@@ -57,6 +58,10 @@ ADAPTER_PORT = 8080
 SEGMENT = re.compile(r"[a-z][a-z0-9_.]*")
 MAJOR = re.compile(r"[1-9]\d*")
 PLACEHOLDER = re.compile(r"\{([^{}]+)\}")
+MINTED_KEY = "upstream-key"
+API_VERSION = re.compile(r"pub const API_VERSION: u32 = (\d+);")
+PULLS = 5
+PULL_WAIT_S = 10
 ANSWERED = re.compile(r"([a-z][a-z0-9_.]*@[1-9]\d*/[a-z0-9_-]+)#(/.*)")
 MINTED = "minted"
 UPSTREAM = "upstream:"
@@ -86,19 +91,32 @@ NOTES = {
 }
 
 
-def docker(*args: str, check: bool = True, given: str | None = None) -> str:
-    done = subprocess.run(["docker", *args], capture_output=True, text=True, check=False, input=given)
+def docker(*args: str, check: bool = True, given: str | None = None, handed: dict[str, str] | None = None) -> str:
+    done = subprocess.run(["docker", *args], capture_output=True, text=True, check=False, input=given,
+                          env=None if handed is None else os.environ | handed)
     if check and done.returncode != 0:
         raise RuntimeError(f"docker {args[0]}: {done.stderr.strip()}")
     return done.stdout.strip()
 
 
-def manifest() -> tuple[str, str, int, int]:
-    """The plugin's own service: its id, its pinned image, the port it listens on and its API version."""
+def manifest() -> tuple[str, str, int, int, list[str]]:
+    """The plugin's own service: its id, its pinned image, the port it listens on, the API
+    version the adapter speaks, and the environment variables its env hands the key
+    lemonfiber mints."""
     read = tomllib.loads((ROOT / "plugin.toml").read_text(encoding="utf-8"))
     plugin = read["plugin"]["id"]
     upstream = next(one for one in read["service"] if one["id"] == plugin)
-    return plugin, f"{upstream['image']}@{upstream['digest']}", upstream["listens"], upstream["api"]["version"]
+    given = [name for name, held in upstream.get("env", {}).items()
+             if isinstance(held, dict) and held.get("secret") == MINTED_KEY]
+    return plugin, f"{upstream['image']}@{upstream['digest']}", upstream["listens"], api_version(), given
+
+
+def api_version() -> int:
+    """The version of the service's API the adapter speaks, as `src/prowlarr.rs` declares it."""
+    declared = API_VERSION.search((ROOT / "src" / "prowlarr.rs").read_text(encoding="utf-8"))
+    if declared is None:
+        raise RuntimeError("src/prowlarr.rs declares no API_VERSION")
+    return int(declared.group(1))
 
 
 def core_rev() -> str:
@@ -221,7 +239,17 @@ def pointed(value: object, pointer: str) -> object:
     return value
 
 
-def recorded_live(plugin: str, pinned: str, listens: int, version: int) -> tuple[list[str], dict[tuple[str, str], dict]]:
+def pulled(image: str) -> None:
+    """`image` in the local store, pulled again while its registry refuses for a moment."""
+    for attempt in range(PULLS):
+        if docker("pull", "-q", image, check=False):
+            return
+        time.sleep(PULL_WAIT_S * (attempt + 1))
+    docker("pull", "-q", image)
+
+
+def recorded_live(plugin: str, pinned: str, listens: int, version: int,
+                  given: list[str]) -> tuple[list[str], dict[tuple[str, str], dict]]:
     """What the adapter speaks, and every case asked of it in front of a throwaway service."""
     name = f"{plugin}-record-{uuid.uuid4().hex[:8]}"
     inside, outside = f"{name}-inside", f"{name}-outside"
@@ -233,14 +261,16 @@ def recorded_live(plugin: str, pinned: str, listens: int, version: int) -> tuple
         for directory in (upstream, data, adapter):
             directory.mkdir(parents=True)
         try:
+            pulled(pinned)
             docker("network", "create", "--internal", inside)
             docker("network", "create", outside)
             docker("run", "-d", "--name", f"{name}-upstream", "--network", inside,
                    "--network-alias", plugin,
                    *(flag for host in REFUSING_HOSTS for flag in ("--add-host", f"{host}:127.0.0.1")),
                    "-e", f"PUID={os.getuid()}", "-e", f"PGID={os.getgid()}",
-                   "-e", "TZ=Etc/UTC", "-e", f"{plugin.upper()}__AUTH__APIKEY={api_key}",
-                   "-v", f"{upstream}:/config", "-v", f"{data}:/data", pinned)
+                   "-e", "TZ=Etc/UTC", *(flag for variable in given for flag in ("-e", variable)),
+                   "-v", f"{upstream}:/config", "-v", f"{data}:/data", pinned,
+                   handed=dict.fromkeys(given, api_key))
             waited("the service did not answer with the key minted for it",
                    lambda: in_service(f"{name}-upstream", listens, version, api_key, "GET",
                                       "/system/status") == "200")
@@ -337,8 +367,8 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="record again and compare with conformance/")
     checking = parser.parse_args().check
 
-    plugin, pinned, listens, version = manifest()
-    speaks, said = recorded_live(plugin, pinned, listens, version)
+    plugin, pinned, listens, version, given = manifest()
+    speaks, said = recorded_live(plugin, pinned, listens, version, given)
     faults = [fault for spoken in speaks for case in published_cases(spoken)
               if (fault := filed(said, spoken, case["case"], checking)) is not None]
     for fault in faults:
