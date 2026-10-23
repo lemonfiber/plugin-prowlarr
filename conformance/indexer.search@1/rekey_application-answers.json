@@ -1,0 +1,16 @@
+{
+  "recorded_from": "lscr.io/linuxserver/prowlarr@sha256:4e992f9b9229bc8c97c666b10b042a7360bce1d99b196e8aa29fd9805849cbf1",
+  "note": "That application given a new key, everything else about it as Prowlarr held it.",
+  "request": {
+    "method": "POST",
+    "path": "/lemonfiber/indexer.search/v1/rekey_application",
+    "accept": "application/json"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body_starts_with": "null"
+  }
+}
