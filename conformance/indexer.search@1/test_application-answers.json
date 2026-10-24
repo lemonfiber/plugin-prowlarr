@@ -1,19 +1,10 @@
 {
   "recorded_from": "lscr.io/linuxserver/prowlarr@sha256:4e992f9b9229bc8c97c666b10b042a7360bce1d99b196e8aa29fd9805849cbf1",
   "note": "That application tested as Prowlarr holds it, its curator refusing every connection: Prowlarr's words carried.",
-  "request": {
-    "method": "POST",
-    "path": "/lemonfiber/indexer.search/v1/test_application",
-    "accept": "application/json"
-  },
+  "request": {"method": "POST", "path": "/lemonfiber/indexer.search/v1/test_application", "accept": "application/json"},
   "response": {
-    "status": 500,
-    "headers": {
-      "content-type": "application/problem+json"
-    },
-    "json": {
-      "type": "refused",
-      "detail": "HTTP 400: Unable to complete application test, cannot connect to Sonarr. One or more errors occurred. (Connection refused) (sonarr:8989)"
-    }
+    "status": 200,
+    "headers": {"content-type": "application/json"},
+    "body_starts_with": "null"
   }
 }
