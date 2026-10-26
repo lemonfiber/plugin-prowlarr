@@ -53,6 +53,7 @@ id     = "upstream-key"
 of     = "prowlarr"
 minted = true
 why    = "The key Prowlarr answers its API to, which the adapter in front of it presents"
+carried_from = { file = "/config/config.xml", format = "xml", key = "Config.ApiKey" }
 
 [[proof]]
 id      = "prowlarr.answers"
