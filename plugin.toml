@@ -83,6 +83,7 @@ expect  = { status = 401 }
 [[ask]]
 service    = "prowlarr"
 capability = "library.curate"
+native     = "servarr"
 each       = true
 
 [[ask]]
