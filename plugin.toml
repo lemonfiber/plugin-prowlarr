@@ -89,6 +89,7 @@ each       = true
 [[ask]]
 service    = "prowlarr"
 capability = "indexer.proxy"
+native     = "flaresolverr"
 
 [[ask]]
 service    = "prowlarr"

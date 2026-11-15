@@ -7,6 +7,7 @@ use lemonfiber_ports::service::{
     Aggregator, Aggregators, AppSync, Application, ApplicationKind, Failure, IndexerUse, Indexers,
     Limits, RegisteredApplication,
 };
+use lemonfiber_ports::Instant;
 
 use super::Prowlarr;
 
@@ -263,7 +264,7 @@ async fn indexer_use_is_read_from_the_aggregator_rather_than_from_the_indexers()
                 failed_queries: 0,
                 grabs: 0,
                 failed_grabs: 0,
-                rested_until: Some("2026-08-16T20:00:00Z".to_owned()),
+                rested_until: Some(Instant::from_seconds(1_786_910_400)),
                 limits: None,
                 searched_from: None,
                 grabbed_from: None,
@@ -323,11 +324,11 @@ async fn a_recorded_cap_is_read_with_the_window_and_the_calls_it_is_counted_over
     assert!(fake.asked_for("/api/v1/history/since?date=2026-08-17T11:00:00"));
     assert_eq!(
         indexers.first().and_then(|indexer| indexer.searched_from),
-        Some(SystemTime::UNIX_EPOCH + Duration::from_secs(1_786_964_730))
+        Some(Instant::from_seconds(1_786_964_730))
     );
     assert_eq!(
         indexers.first().and_then(|indexer| indexer.grabbed_from),
-        Some(SystemTime::UNIX_EPOCH + Duration::from_secs(1_786_966_800))
+        Some(Instant::from_seconds(1_786_966_800))
     );
 }
 

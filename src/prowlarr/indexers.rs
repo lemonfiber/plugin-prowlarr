@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use serde::Deserialize;
 
 use super::Prowlarr;
-use crate::instant;
+use lemonfiber_ports::instant::{self, Instant};
 use lemonfiber_ports::service::{Failure, IndexerUse, Indexers, Limits};
 
 const EPOCH: &str = "1970-01-01T00:00:00";
@@ -230,7 +230,7 @@ fn setting(indexer: &IndexerResource, name: &str) -> Option<u64> {
 fn indexer_use(
     indexer: IndexerResource,
     counts: Option<&IndexerCounts>,
-    rested_until: Option<String>,
+    rested_until: Option<&str>,
     limits: Option<Limits>,
     calls: FirstCalls,
 ) -> IndexerUse {
@@ -246,10 +246,10 @@ fn indexer_use(
             .saturating_add(count(|counts| counts.number_of_failed_rss_queries)),
         grabs: count(|counts| counts.number_of_grabs),
         failed_grabs: count(|counts| counts.number_of_failed_grabs),
-        rested_until,
+        rested_until: rested_until.and_then(Instant::from_service_text),
         limits,
-        searched_from: calls.searched,
-        grabbed_from: calls.grabbed,
+        searched_from: calls.searched.map(Instant::of),
+        grabbed_from: calls.grabbed.map(Instant::of),
     }
 }
 
@@ -280,7 +280,7 @@ async fn indexers(prowlarr: &Prowlarr, now: SystemTime) -> Result<Vec<IndexerUse
             let rested = standing
                 .iter()
                 .find(|status| status.indexer_id == indexer.id)
-                .and_then(|status| status.disabled_till.clone());
+                .and_then(|status| status.disabled_till.as_deref());
             let calls = first.get(&indexer.id).copied().unwrap_or_default();
             indexer_use(indexer, counts, rested, limits, calls)
         })
