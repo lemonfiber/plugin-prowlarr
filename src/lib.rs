@@ -2,5 +2,4 @@
 //! one Prowlarr through the Servarr client the Servarr adapters share.
 
 pub mod adapter;
-mod instant;
 pub mod prowlarr;

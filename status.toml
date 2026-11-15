@@ -14,4 +14,5 @@ requirement = [
   { id = "F14-R15", state = "partial", evidence = ["Cargo.toml", "Dockerfile", ".github/workflows/release.yml"] },
   { id = "F14-R27", state = "partial", evidence = ["Dockerfile", ".github/workflows/adapter.yml"] },
   { id = "F14-R28", state = "partial", evidence = ["src/main.rs", "src/adapter.rs"] },
+  { id = "ARCH-R428", state = "partial", evidence = ["src/prowlarr/solvers.rs", "src/prowlarr/solvers/tests.rs::a_solver_is_added_under_the_tag_it_already_holds", "src/prowlarr/solvers/tests.rs::only_the_challenge_solvers_it_fetches_through_are_listed_with_their_tags", "conformance/indexer.search@1/proxies-answers.json", "conformance/indexer.search@1/add_proxy-answers.json"] },
 ]

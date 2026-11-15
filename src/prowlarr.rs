@@ -11,6 +11,7 @@ use lemonfiber_ports::service::{Aggregator, Aggregators, Failure, KnownAggregato
 
 mod applications;
 mod indexers;
+mod solvers;
 
 /// What every failure is blamed on.
 pub const SERVICE: &str = "prowlarr";
