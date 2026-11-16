@@ -17,8 +17,7 @@ pub const UPSTREAM: &str = "Prowlarr";
 /// The Prowlarr release this adapter's recordings were taken from.
 pub const RELEASE: &str = "2.6.5.5623-ls164";
 
-/// The digest of the image that release's recordings were taken from.
-pub const DIGEST: &str = "sha256:4e992f9b9229bc8c97c666b10b042a7360bce1d99b196e8aa29fd9805849cbf1";
+include!(concat!(env!("OUT_DIR"), "/fronted.rs"));
 
 /// What this adapter says it is: the contract it speaks and the release it supports.
 #[must_use]

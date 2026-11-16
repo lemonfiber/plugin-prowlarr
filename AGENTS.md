@@ -48,8 +48,9 @@ Re-record whenever the adapter's answers or either digest change.
   the one `adapter-kit-servarr` names at its own `rev` (`REPO-R100`).
 - **Moving Prowlarr's digest** means recording every proof's response and
   conformance case again against the new image in the same change, moving
-  `RELEASE` and `DIGEST` in `src/adapter.rs` with it, and committing the
-  `proofs.json` the checks write.
+  `RELEASE` in `src/adapter.rs` with it (`build.rs` reads `DIGEST` from
+  `plugin.toml`, the digest's one home), and committing the `proofs.json` the
+  checks write.
 
 ## Checks
 
