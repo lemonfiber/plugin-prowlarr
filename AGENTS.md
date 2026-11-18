@@ -47,10 +47,9 @@ Re-record whenever the adapter's answers or either digest change.
   core commit `targets.toml` names, the same for every `lemonfiber-*` crate and
   the one `adapter-kit-servarr` names at its own `rev` (`REPO-R100`).
 - **Moving Prowlarr's digest** means recording every proof's response and
-  conformance case again against the new image in the same change, moving
-  `RELEASE` in `src/adapter.rs` with it (`build.rs` reads `DIGEST` from
-  `plugin.toml`, the digest's one home), and committing the `proofs.json` the
-  checks write.
+  conformance case again against the new image in the same change, moving its
+  `tag` with it (`build.rs` reads `RELEASE` and `DIGEST` from `plugin.toml`,
+  their one home), and committing the `proofs.json` the checks write.
 
 ## Checks
 
