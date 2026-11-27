@@ -1,5 +1,5 @@
 {
-  "recorded_from": "lscr.io/linuxserver/prowlarr@sha256:4e992f9b9229bc8c97c666b10b042a7360bce1d99b196e8aa29fd9805849cbf1",
+  "recorded_from": "lscr.io/linuxserver/prowlarr@sha256:6660787a99b2e58203539583663c973b48979fc00ff2cb78dc0ea17429e1f6ef",
   "note": "The challenge solvers a fresh Prowlarr fetches through, which are none until one is added.",
   "request": {"method": "POST", "path": "/lemonfiber/indexer.search/v1/proxies", "accept": "application/json"},
   "response": {
